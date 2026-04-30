@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pudiding Dashboard</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#170C79">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pudiding Dashboard">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { 
+                extend: { 
+                    colors: { primary: '#170C79', cream: '#EFE3CA', accent1: '#56B6C6', accent2: '#8ACBD0', border: '#d4cbb0' } 
+                } 
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <div id="alert-box" class="toast-center w-full max-w-[340px]">
+        <div class="bg-white border-2 border-primary shadow-2xl rounded-2xl p-6 text-center">
+            <div id="alert-icon" class="mb-4 flex justify-center"></div>
+            <h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3>
+            <p id="alert-message" class="text-sm text-slate-600 mb-6"></p>
+            <button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 z-[9999] modal-overlay hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center animate-in">
+            <div class="text-primary mb-4 flex justify-center"><i data-lucide="help-circle" class="w-14 h-14"></i></div>
+            <h3 class="text-xl font-bold mb-2 text-primary">Hapus Data?</h3>
+            <p class="text-sm text-slate-500 mb-8">Data yang dihapus tidak dapat dipulihkan.</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                <button id="confirm-ok" class="flex-1 h-12 bg-red-500 text-white rounded-xl font-bold shadow-lg">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-screen" class="fixed inset-0 flex items-center justify-center p-4 z-[999]">
+        <div class="w-full max-w-sm bg-white rounded-3xl border border-border shadow-2xl p-10 text-center">
+            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="cookie" class="w-10 h-10 text-primary"></i></div>
+            <h1 class="text-2xl font-black text-primary mb-2 tracking-tighter uppercase">Pudiding Dashboard</h1>
+            <p class="text-sm text-slate-500 mb-8 font-medium">Masukkan akun untuk akses dashboard.</p>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="text" id="username" placeholder="Username" class="w-full h-12 bg-cream/30 border-2 border-transparent focus:border-primary rounded-xl px-4 font-semibold outline-none transition-all" required>
+                <input type="password" id="password" placeholder="Password" class="w-full h-12 bg-cream/30 border-2 border-transparent focus:border-primary rounded-xl px-4 font-semibold outline-none transition-all" required>
+                <button type="submit" class="w-full h-12 bg-primary text-white rounded-xl font-bold mt-4 shadow-lg hover:bg-opacity-90">Masuk</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-app" class="flex h-screen w-full hidden text-primary">
+        <aside class="w-64 border-r border-border bg-white flex flex-col hidden md:flex shrink-0">
+            <div class="h-20 flex items-center px-8">
+                <i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i>
+                <span class="font-black text-lg uppercase tracking-tighter">Pudiding</span>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('pesanan')" id="nav-pesanan" class="nav-btn active flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="shopping-bag" class="w-5 h-5 mr-3"></i> Kasir Pesanan</button>
+                <button onclick="switchTab('pengeluaran')" id="nav-pengeluaran" class="nav-btn flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="receipt" class="w-5 h-5 mr-3"></i> Pengeluaran</button>
+                <button onclick="switchTab('laporan')" id="nav-laporan" class="nav-btn flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Laporan Arus Kas</button>
+                <div class="pt-6 mt-6 border-t border-border">
+                    <button onclick="handleLogout()" class="flex items-center w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all"><i data-lucide="power" class="w-5 h-5 mr-3"></i> Keluar</button>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <header class="h-16 bg-white border-b border-border flex items-center justify-between px-6 md:hidden shrink-0">
+                <span class="font-black uppercase tracking-tighter">Puding.</span>
+                <div class="flex gap-2">
+                    <button onclick="switchTab('pesanan')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="shopping-bag" class="w-5 h-5"></i></button>
+                    <button onclick="switchTab('pengeluaran')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="receipt" class="w-5 h-5"></i></button>
+                    <button onclick="switchTab('laporan')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 md:p-10">
+                <div id="page-pesanan" class="tab-content block">
+                    <h2 class="text-3xl font-black mb-8 tracking-tight uppercase">Kasir Pesanan</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Karamel Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 8.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-ori', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-ori" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-ori', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Regal Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 10.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-regal', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-regal" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-regal', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Oreo Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 11.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-oreo', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-oreo" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-oreo', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Karamel 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 42.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-karamel-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-karamel-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-karamel-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Regal 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 50.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-regal-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-regal-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-regal-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Oreo 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 55.000</p>
+                            <div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-oreo-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-oreo-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-oreo-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div>
+                        </div>
+                    </div>
+
+                    <div class="shad-card p-8 bg-primary text-white border-none shadow-2xl">
+                        <div class="flex justify-between items-center mb-8 pb-6 border-b border-white/10"><h3 class="font-bold text-lg text-white/70 tracking-widest uppercase">Total Pembayaran</h3><span class="text-3xl font-black">Rp <span id="total-price">0</span></span></div>
+                        <div class="space-y-5">
+                            <div><label class="text-[10px] font-black uppercase text-accent2">Tanggal Transaksi</label><input type="date" id="order-date" class="w-full h-12 bg-white/10 border border-white/20 rounded-xl px-4 text-sm mt-1 outline-none font-semibold"></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="text-[10px] font-black uppercase text-accent2">Biaya Lain</label><input type="text" id="add-item-name" placeholder="Ongkir" class="w-full h-12 bg-white/10 border border-white/20 rounded-xl px-4 text-sm mt-1 outline-none"></div>
+                                <div><label class="text-[10px] font-black uppercase text-accent2">Nominal (Rp)</label><input type="number" id="add-item-price" value="0" oninput="calculateTotal()" class="w-full h-12 bg-white/10 border border-white/20 rounded-xl px-4 text-sm mt-1 outline-none font-bold"></div>
+                            </div>
+                            <div><label class="text-[10px] font-black uppercase text-accent2">Metode</label><select id="payment-method" class="w-full h-12 bg-white/10 border border-white/20 rounded-xl px-4 mt-1 outline-none font-bold text-white"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                            <button onclick="konfirmasiPesanan()" class="w-full h-14 bg-accent1 text-primary rounded-2xl font-black mt-4 hover:scale-[1.01] transition-all">SIMPAN TRANSAKSI</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-pengeluaran" class="tab-content hidden">
+                    <h2 class="text-3xl font-black text-primary mb-8 tracking-tight uppercase">Catat Pengeluaran</h2>
+                    <div class="shad-card p-10">
+                        <form onsubmit="simpanPengeluaran(event)" class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label class="text-xs font-black text-slate-400 uppercase">Tanggal Belanja</label><input type="date" id="exp-date" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none" required></div>
+                                <div><label class="text-xs font-black text-slate-400 uppercase">Metode Pembayaran</label><select id="exp-method" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                            </div>
+
+                            <div class="border-t border-border pt-8">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h4 class="font-black uppercase text-sm tracking-widest text-primary">Daftar Item Belanja</h4>
+                                    <button type="button" onclick="addExpenseRow()" class="px-4 py-2 bg-accent1 text-primary text-xs font-black rounded-lg hover:bg-accent2 transition-all">+ TAMBAH BARIS</button>
+                                </div>
+                                
+                                <div id="expense-items-container" class="space-y-4">
+                                    </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-border">
+                                <div class="text-right">
+                                    <p class="text-xs font-bold text-slate-400 uppercase">Total Pengeluaran</p>
+                                    <p class="text-2xl font-black text-primary">Rp <span id="exp-total-all">0</span></p>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full h-14 bg-primary text-white rounded-2xl font-black shadow-xl hover:opacity-90 transition-all uppercase tracking-widest">Simpan Semua Pengeluaran</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="page-laporan" class="tab-content hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                        <h2 class="text-3xl font-black text-primary tracking-tight uppercase">Arus Kas</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <input type="date" id="filter-start" class="h-10 bg-white border border-border rounded-xl px-3 text-xs font-bold shadow-sm">
+                            <input type="date" id="filter-end" class="h-10 bg-white border border-border rounded-xl px-3 text-xs font-bold shadow-sm">
+                            <button onclick="generateReport()" class="h-10 px-6 bg-primary text-white text-xs font-black rounded-xl shadow-lg">Filter</button>
+                            <button onclick="exportToExcel()" class="h-10 px-4 bg-emerald-500 text-white rounded-xl shadow-lg"><i data-lucide="file-spreadsheet"></i></button>
+                            <button onclick="exportToPDF()" class="h-10 px-4 bg-red-500 text-white rounded-xl shadow-lg"><i data-lucide="file-text"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-sm">
+                        <div class="shad-card p-8 border-l-8 border-emerald-500 font-bold"><p class="text-slate-400 uppercase text-[10px] mb-1">Pemasukan</p><h3 class="text-3xl font-black text-emerald-600" id="sum-income">Rp 0</h3></div>
+                        <div class="shad-card p-8 border-l-8 border-red-500 font-bold"><p class="text-slate-400 uppercase text-[10px] mb-1">Pengeluaran</p><h3 class="text-3xl font-black text-red-500" id="sum-expense">Rp 0</h3></div>
+                        <div class="shad-card p-8 bg-primary text-white border-none shadow-2xl font-bold"><p class="text-accent2 uppercase text-[10px] mb-1">Saldo Bersih</p><h3 class="text-3xl font-black" id="sum-balance">Rp 0</h3></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                        <div class="shad-card p-8"><h4 class="font-black mb-6 uppercase text-xs tracking-widest text-primary">Penjualan Menu</h4><div class="relative h-[300px] w-full"><canvas id="menuChart"></canvas></div></div>
+                        <div class="shad-card p-8"><h4 class="font-black mb-6 uppercase text-xs tracking-widest text-primary">Metode Bayar</h4><div class="relative h-[300px] w-full"><canvas id="paymentChart"></canvas></div></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
+                        <div class="shad-card h-[450px] flex flex-col overflow-hidden">
+                            <div class="p-6 border-b bg-cream/10 font-black flex justify-between items-center text-primary uppercase text-sm">Histori Jual <i data-lucide="arrow-up-right" class="w-4 h-4 text-emerald-500"></i></div>
+                            <div class="overflow-auto flex-1 text-sm"><table class="w-full text-left text-xs"><thead class="bg-cream/20 font-bold"><tr><th class="p-4 uppercase text-[10px]">Tanggal</th><th class="p-4 uppercase text-[10px] text-right">Total</th><th class="p-4 uppercase text-[10px] text-center">Aksi</th></tr></thead><tbody id="order-table-body" class="divide-y divide-border"></tbody></table></div>
+                        </div>
+                        <div class="shad-card h-[450px] flex flex-col overflow-hidden">
+                            <div class="p-6 border-b bg-cream/10 font-black flex justify-between items-center text-primary uppercase text-sm">Histori Belanja <i data-lucide="arrow-down-right" class="w-4 h-4 text-red-500"></i></div>
+                            <div class="overflow-auto flex-1 text-sm"><table class="w-full text-left text-xs"><thead class="bg-cream/20 font-bold"><tr><th class="p-4 text-[10px] uppercase">Tanggal</th><th class="p-4 text-[10px] uppercase">Item</th><th class="p-4 text-[10px] uppercase text-right">Total</th><th class="p-4 text-[10px] uppercase text-center">Aksi</th></tr></thead><tbody id="expense-table-body" class="divide-y divide-border"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="receipt-modal" class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-10 receipt-font border-t-8 border-primary">
+            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase text-primary tracking-tighter">Puding.</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
+            <div id="receipt-items" class="space-y-4 mb-8 text-sm text-primary font-bold"></div>
+            <div class="border-t-2 border-dashed border-border pt-8 flex justify-between font-black text-xl text-primary"><span>TOTAL</span><span id="receipt-total-price"></span></div>
+            <div class="text-center mt-10">
+                <p class="text-[10px] font-black uppercase text-accent1 mb-6 font-bold">Metode: <span id="receipt-method"></span></p>
+                <div class="flex gap-3 btn-no-print">
+                    <button onclick="window.print()" class="flex-1 h-12 bg-cream text-primary rounded-xl font-black text-xs hover:bg-border transition">PDF</button>
+                    <button onclick="closeReceipt()" class="flex-1 h-12 bg-primary text-white rounded-xl font-black text-xs shadow-lg">TUTUP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker PWA Aktif!', reg))
+                    .catch(err => console.log('Service Worker Gagal', err));
+            });
+        }
+    </script>
+</body>
+</html>
