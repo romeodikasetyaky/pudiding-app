@@ -29,35 +29,43 @@ function resetIdleTimer() {
 }
 ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => window.addEventListener(evt, resetIdleTimer));
 
-/** 3. AUTH & SESSION */
+/** 3. AUTH & SESSION (VERSI STABIL) */
 function handleLogin(e) {
     e.preventDefault();
     
-    // PERBAIKAN: .trim() untuk menghapus spasi otomatis, .toLowerCase() untuk mengabaikan huruf besar
     const inputUser = document.getElementById('username').value.trim().toLowerCase();
     const inputPass = document.getElementById('password').value.trim().toLowerCase();
 
+    // Alert untuk diagnosa (bisa dihapus jika sudah berhasil)
+    console.log("Mencoba login dengan:", inputUser, inputPass);
+
     if (inputUser === 'puding' && inputPass === 'karamel') {
-        // PERBAIKAN: Gunakan localStorage agar PWA di HP tidak mudah ter-logout sendiri
         localStorage.setItem('isLoggedIn', 'true');
+        alert("Login Berhasil! Klik OK untuk masuk ke Dashboard."); // Memastikan fungsi berjalan
         checkSession();
-        showCustomAlert('Berhasil!', 'Dashboard siap digunakan.');
     } else {
         showCustomAlert('Akses Gagal', 'Username/Password salah.', 'error');
     }
 }
 
-function handleLogout(msg = 'Anda telah keluar.') {
-    localStorage.removeItem('isLoggedIn');
-    clearTimeout(idleTimer);
-    location.reload();
-}
-
 function checkSession() {
     const isLogin = localStorage.getItem('isLoggedIn') === 'true';
-    document.getElementById('login-screen').classList.toggle('hidden', isLogin);
-    document.getElementById('main-app').classList.toggle('hidden', !isLogin);
-    if (isLogin) { lucide.createIcons(); initApp(); resetIdleTimer(); }
+    const loginScr = document.getElementById('login-screen');
+    const mainApp = document.getElementById('main-app');
+
+    if (isLogin) {
+        // Paksa sembunyikan login, paksa munculkan dashboard
+        loginScr.style.setProperty('display', 'none', 'important');
+        mainApp.style.setProperty('display', 'flex', 'important');
+        mainApp.classList.remove('hidden');
+        
+        initApp();
+        lucide.createIcons();
+        resetIdleTimer();
+    } else {
+        loginScr.style.setProperty('display', 'flex', 'important');
+        mainApp.style.setProperty('display', 'none', 'important');
+    }
 }
 
 /** 4. UI HELPERS */
