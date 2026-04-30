@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pudiding Dashboard</title>
+    <title>Puding Admin - Premium Dashboard</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#170C79">
@@ -13,13 +13,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: { 
-                extend: { 
-                    colors: { primary: '#170C79', cream: '#EFE3CA', accent1: '#56B6C6', accent2: '#8ACBD0', border: '#d4cbb0' } 
-                } 
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { primary: '#170C79', cream: '#EFE3CA', accent1: '#56B6C6', accent2: '#8ACBD0', border: '#d4cbb0' } } } }
     </script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -34,7 +28,7 @@
 <body class="h-screen bg-cream overflow-hidden">
 
     <div id="loading-overlay" class="fixed inset-0 bg-primary z-[10000] flex items-center justify-center transition-opacity duration-500">
-        <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Pudiding.</div>
+        <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Puding.</div>
     </div>
 
     <div id="alert-box" class="toast-center w-full max-w-[340px]">
@@ -43,6 +37,18 @@
             <h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3>
             <p id="alert-message" class="text-sm text-slate-600 mb-6"></p>
             <button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 z-[9999] modal-overlay hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center animate-in">
+            <div class="text-primary mb-4 flex justify-center"><i data-lucide="help-circle" class="w-14 h-14"></i></div>
+            <h3 class="text-xl font-bold mb-2 text-primary">Hapus Data?</h3>
+            <p class="text-sm text-slate-500 mb-8">Data yang dihapus tidak dapat dipulihkan.</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                <button id="confirm-ok" class="flex-1 h-12 bg-red-500 text-white rounded-xl font-bold shadow-lg">Ya, Hapus</button>
+            </div>
         </div>
     </div>
 
@@ -112,18 +118,95 @@
                 </div>
 
                 <div id="page-pengeluaran" class="tab-content hidden-force">
-                   <h2 class="text-3xl font-black text-primary mb-8 tracking-tight uppercase text-center">Catat Pengeluaran</h2>
-                   <p class="text-center">Silakan masukkan detail belanja operasional di sini.</p>
+                    <h2 class="text-3xl font-black text-primary mb-8 tracking-tight uppercase">Catat Pengeluaran</h2>
+                    <div class="shad-card p-10">
+                        <form onsubmit="simpanPengeluaran(event)" class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label class="text-xs font-black text-slate-400 uppercase">Tanggal Belanja</label><input type="date" id="exp-date" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none" required></div>
+                                <div><label class="text-xs font-black text-slate-400 uppercase">Metode Pembayaran</label><select id="exp-method" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                            </div>
+
+                            <div class="border-t border-border pt-8">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h4 class="font-black uppercase text-sm tracking-widest text-primary">Daftar Item Belanja</h4>
+                                    <button type="button" onclick="addExpenseRow()" class="px-4 py-2 bg-accent1 text-primary text-xs font-black rounded-lg hover:bg-accent2 transition-all">+ TAMBAH BARIS</button>
+                                </div>
+                                <div id="expense-items-container" class="space-y-4"></div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-border">
+                                <div class="text-right">
+                                    <p class="text-xs font-bold text-slate-400 uppercase">Total Pengeluaran</p>
+                                    <p class="text-2xl font-black text-primary">Rp <span id="exp-total-all">0</span></p>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full h-14 bg-primary text-white rounded-2xl font-black shadow-xl hover:opacity-90 transition-all uppercase tracking-widest">Simpan Semua Pengeluaran</button>
+                        </form>
+                    </div>
                 </div>
 
                 <div id="page-laporan" class="tab-content hidden-force">
-                    <h2 class="text-3xl font-black text-primary mb-8 tracking-tight uppercase">Arus Kas</h2>
-                    <p>Memuat laporan...</p>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                        <h2 class="text-3xl font-black text-primary tracking-tight uppercase">Arus Kas</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <input type="date" id="filter-start" class="h-10 bg-white border border-border rounded-xl px-3 text-xs font-bold shadow-sm">
+                            <input type="date" id="filter-end" class="h-10 bg-white border border-border rounded-xl px-3 text-xs font-bold shadow-sm">
+                            <button onclick="generateReport()" class="h-10 px-6 bg-primary text-white text-xs font-black rounded-xl shadow-lg">Filter</button>
+                            <button onclick="exportToExcel()" class="h-10 px-4 bg-emerald-500 text-white rounded-xl shadow-lg"><i data-lucide="file-spreadsheet"></i></button>
+                            <button onclick="exportToPDF()" class="h-10 px-4 bg-red-500 text-white rounded-xl shadow-lg"><i data-lucide="file-text"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-sm">
+                        <div class="shad-card p-8 border-l-8 border-emerald-500 font-bold"><p class="text-slate-400 uppercase text-[10px] mb-1">Pemasukan</p><h3 class="text-3xl font-black text-emerald-600" id="sum-income">Rp 0</h3></div>
+                        <div class="shad-card p-8 border-l-8 border-red-500 font-bold"><p class="text-slate-400 uppercase text-[10px] mb-1">Pengeluaran</p><h3 class="text-3xl font-black text-red-500" id="sum-expense">Rp 0</h3></div>
+                        <div class="shad-card p-8 bg-primary text-white border-none shadow-2xl font-bold"><p class="text-accent2 uppercase text-[10px] mb-1">Saldo Bersih</p><h3 class="text-3xl font-black" id="sum-balance">Rp 0</h3></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                        <div class="shad-card p-8"><h4 class="font-black mb-6 uppercase text-xs tracking-widest text-primary">Penjualan Menu</h4><div class="relative h-[300px] w-full"><canvas id="menuChart"></canvas></div></div>
+                        <div class="shad-card p-8"><h4 class="font-black mb-6 uppercase text-xs tracking-widest text-primary">Metode Bayar</h4><div class="relative h-[300px] w-full"><canvas id="paymentChart"></canvas></div></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
+                        <div class="shad-card h-[450px] flex flex-col overflow-hidden">
+                            <div class="p-6 border-b bg-cream/10 font-black flex justify-between items-center text-primary uppercase text-sm">Histori Jual <i data-lucide="arrow-up-right" class="w-4 h-4 text-emerald-500"></i></div>
+                            <div class="overflow-auto flex-1 text-sm"><table class="w-full text-left text-xs"><thead class="bg-cream/20 font-bold"><tr><th class="p-4 uppercase text-[10px]">Tanggal</th><th class="p-4 uppercase text-[10px] text-right">Total</th><th class="p-4 uppercase text-[10px] text-center">Aksi</th></tr></thead><tbody id="order-table-body" class="divide-y divide-border"></tbody></table></div>
+                        </div>
+                        <div class="shad-card h-[450px] flex flex-col overflow-hidden">
+                            <div class="p-6 border-b bg-cream/10 font-black flex justify-between items-center text-primary uppercase text-sm">Histori Belanja <i data-lucide="arrow-down-right" class="w-4 h-4 text-red-500"></i></div>
+                            <div class="overflow-auto flex-1 text-sm"><table class="w-full text-left text-xs"><thead class="bg-cream/20 font-bold"><tr><th class="p-4 text-[10px] uppercase">Tanggal</th><th class="p-4 text-[10px] uppercase">Item</th><th class="p-4 text-[10px] uppercase text-right">Total</th><th class="p-4 text-[10px] uppercase text-center">Aksi</th></tr></thead><tbody id="expense-table-body" class="divide-y divide-border"></tbody></table></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <div id="receipt-modal" class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-10 receipt-font border-t-8 border-primary">
+            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase text-primary tracking-tighter">Puding.</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
+            <div id="receipt-items" class="space-y-4 mb-8 text-sm text-primary font-bold"></div>
+            <div class="border-t-2 border-dashed border-border pt-8 flex justify-between font-black text-xl text-primary"><span>TOTAL</span><span id="receipt-total-price"></span></div>
+            <div class="text-center mt-10">
+                <p class="text-[10px] font-black uppercase text-accent1 mb-6 font-bold">Metode: <span id="receipt-method"></span></p>
+                <div class="flex gap-3 btn-no-print">
+                    <button onclick="window.print()" class="flex-1 h-12 bg-cream text-primary rounded-xl font-black text-xs hover:bg-border transition">PDF</button>
+                    <button onclick="closeReceipt()" class="flex-1 h-12 bg-primary text-white rounded-xl font-black text-xs shadow-lg">TUTUP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker PWA Aktif!'))
+                    .catch(err => console.log('Service Worker Gagal', err));
+            });
+        }
+    </script>
 </body>
 </html>
