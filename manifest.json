@@ -1,13 +1,13 @@
-<<<<<<< HEAD
+
 {
-  "name": "Puding Admin",
-  "short_name": "Puding",
+  "name": "Pudiding Dashboard",
+  "short_name": "Pudiding",
   "description": "Aplikasi Kasir dan Laporan Puding",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#EFE3CA",
   "theme_color": "#170C79",
-  "orientation": "portrait",
+  "orientation": "any",
   "icons": [
     {
       "src": "icon-192.png",
@@ -20,27 +20,25 @@
       "type": "image/png"
     }
   ]
-=======
-{
-  "name": "Puding Admin",
-  "short_name": "Puding",
-  "description": "Aplikasi Kasir dan Laporan Puding",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#EFE3CA",
-  "theme_color": "#170C79",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
->>>>>>> 0785fa1c68e95eae495436e1c6c9db8b1ca1d04b
 }
+{
+  "name": "Pudiding Dashboard",
+  "short_name": "Pudiding",
+  "description": "Aplikasi Kasir dan Laporan Puding",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#EFE3CA",
+  "theme_color": "#170C79",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]}
