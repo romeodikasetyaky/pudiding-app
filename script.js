@@ -362,7 +362,8 @@ function hapusData(tabel, id) {
         const { error } = await supabaseClient.from(tabel).delete().eq('id', id);
         if (error) showCustomAlert('Gagal', 'Izin ditolak.', 'error');
         else { showCustomAlert('Dihapus', 'Data bersih.'); generateReport(); }
-    })};
+    });
+}
 /** 1. CONFIG SUPABASE & MENU DATA */
 const SUPABASE_URL = 'https://smbfunjcwevyzsolbspt.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_f3oGRQtQuvZd_Z2MVVsXKw_BzAyYbSN';
