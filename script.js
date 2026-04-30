@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /** 1. CONFIG SUPABASE & MENU DATA */
 const SUPABASE_URL = 'https://smbfunjcwevyzsolbspt.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_f3oGRQtQuvZd_Z2MVVsXKw_BzAyYbSN';
@@ -363,7 +363,6 @@ function hapusData(tabel, id) {
         if (error) showCustomAlert('Gagal', 'Izin ditolak.', 'error');
         else { showCustomAlert('Dihapus', 'Data bersih.'); generateReport(); }
     });
-=======
 /** 1. CONFIG SUPABASE & MENU DATA */
 const SUPABASE_URL = 'https://smbfunjcwevyzsolbspt.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_f3oGRQtQuvZd_Z2MVVsXKw_BzAyYbSN';
@@ -728,5 +727,4 @@ function hapusData(tabel, id) {
         if (error) showCustomAlert('Gagal', 'Izin ditolak.', 'error');
         else { showCustomAlert('Dihapus', 'Data bersih.'); generateReport(); }
     });
->>>>>>> 0785fa1c68e95eae495436e1c6c9db8b1ca1d04b
 }

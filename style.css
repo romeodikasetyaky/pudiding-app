@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -103,7 +102,6 @@ select:focus {
     #receipt-modal { position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 0; }
     .btn-no-print, .modal-overlay, #alert-box { display: none !important; }
     .receipt-card-print { box-shadow: none !important; border: none !important; width: 100% !important; }
-=======
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -208,5 +206,4 @@ select:focus {
     #receipt-modal { position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 0; }
     .btn-no-print, .modal-overlay, #alert-box { display: none !important; }
     .receipt-card-print { box-shadow: none !important; border: none !important; width: 100% !important; }
->>>>>>> 0785fa1c68e95eae495436e1c6c9db8b1ca1d04b
 }
