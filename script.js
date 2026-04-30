@@ -23,7 +23,7 @@ let idleTimer;
 const INACTIVITY_LIMIT = 5 * 60 * 1000; 
 function resetIdleTimer() {
     clearTimeout(idleTimer);
-    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
         idleTimer = setTimeout(() => handleLogout('Sesi berakhir (Tidak aktif).'), INACTIVITY_LIMIT);
     }
 }
@@ -32,8 +32,14 @@ function resetIdleTimer() {
 /** 3. AUTH & SESSION */
 function handleLogin(e) {
     e.preventDefault();
-    if (document.getElementById('username').value === 'puding' && document.getElementById('password').value === 'karamel') {
-        sessionStorage.setItem('isLoggedIn', 'true');
+    
+    // PERBAIKAN: .trim() untuk menghapus spasi otomatis, .toLowerCase() untuk mengabaikan huruf besar
+    const inputUser = document.getElementById('username').value.trim().toLowerCase();
+    const inputPass = document.getElementById('password').value.trim().toLowerCase();
+
+    if (inputUser === 'puding' && inputPass === 'karamel') {
+        // PERBAIKAN: Gunakan localStorage agar PWA di HP tidak mudah ter-logout sendiri
+        localStorage.setItem('isLoggedIn', 'true');
         checkSession();
         showCustomAlert('Berhasil!', 'Dashboard siap digunakan.');
     } else {
@@ -42,13 +48,13 @@ function handleLogin(e) {
 }
 
 function handleLogout(msg = 'Anda telah keluar.') {
-    sessionStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('isLoggedIn');
     clearTimeout(idleTimer);
     location.reload();
 }
 
 function checkSession() {
-    const isLogin = sessionStorage.getItem('isLoggedIn') === 'true';
+    const isLogin = localStorage.getItem('isLoggedIn') === 'true';
     document.getElementById('login-screen').classList.toggle('hidden', isLogin);
     document.getElementById('main-app').classList.toggle('hidden', !isLogin);
     if (isLogin) { lucide.createIcons(); initApp(); resetIdleTimer(); }
