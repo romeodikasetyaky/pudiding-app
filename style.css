@@ -103,7 +103,7 @@ select:focus {
     .btn-no-print, .modal-overlay, #alert-box { display: none !important; }
     .receipt-card-print { box-shadow: none !important; border: none !important; width: 100% !important; }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
+}
 :root {
     --primary: #170C79;      /* Deep Blue */
     --background: #EFE3CA;   /* Cream/Beige */
