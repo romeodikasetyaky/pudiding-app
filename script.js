@@ -1,4 +1,4 @@
-/** 1. KONFIGURASI SUPABASE */
+/** 1. KONFIGURASI SUPABASE & HELPER ZONA WAKTU (FIX) */
 const SUPABASE_URL = 'https://smbfunjcwevyzsolbspt.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_f3oGRQtQuvZd_Z2MVVsXKw_BzAyYbSN';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -13,6 +13,19 @@ const menus = {
 };
 
 let menuChartInstance = null, paymentChartInstance = null, globalOrders = [], globalExpenses = [], idleTimer;
+
+// FUNGSI PENGUNCI ZONA WAKTU LOKAL
+function createLocalIsoString(dateStr, timeStr = null) {
+    const d = new Date();
+    if (!timeStr) {
+        timeStr = [String(d.getHours()).padStart(2, '0'), String(d.getMinutes()).padStart(2, '0'), String(d.getSeconds()).padStart(2, '0')].join(':');
+    }
+    const tzo = -d.getTimezoneOffset();
+    const dif = tzo >= 0 ? '+' : '-';
+    const pad = num => String(num).padStart(2, '0');
+    const off = dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
+    return `${dateStr}T${timeStr}${off}`; // Menghasilkan format aman: YYYY-MM-DDTHH:mm:ss+07:00
+}
 
 /** 2. LOGIN & SESI */
 const INACTIVITY_LIMIT = 5 * 60 * 1000; 
@@ -62,18 +75,15 @@ function checkSession() {
     }
 }
 
-/** 3. NAVIGASI (FIXED BUG - NO OVERLAP) */
+/** 3. NAVIGASI */
 function switchTab(tabId) {
-    // 1. Sembunyikan semua tab & hapus kelas block-force agar tidak nyangkut
     document.querySelectorAll('.tab-content').forEach(el => {
         el.classList.add('hidden-force');
         el.classList.remove('block-force');
     });
     
-    // 2. Reset status tombol navigasi
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
-    // 3. Munculkan HANYA tab yang dipilih
     const target = document.getElementById(`page-${tabId}`);
     target.classList.remove('hidden-force');
     target.classList.add('block-force');
@@ -85,10 +95,20 @@ function switchTab(tabId) {
 }
 
 function initApp() {
-    const today = new Date().toISOString().split('T')[0];
-    ['order-date', 'exp-date', 'filter-end'].forEach(id => document.getElementById(id).value = today);
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    
+    ['order-date', 'exp-date', 'filter-end'].forEach(id => document.getElementById(id).value = dateStr);
+    
     const lastMonth = new Date(); lastMonth.setDate(lastMonth.getDate() - 30);
-    document.getElementById('filter-start').value = lastMonth.toISOString().split('T')[0];
+    const lm_yyyy = lastMonth.getFullYear();
+    const lm_mm = String(lastMonth.getMonth() + 1).padStart(2, '0');
+    const lm_dd = String(lastMonth.getDate()).padStart(2, '0');
+    document.getElementById('filter-start').value = `${lm_yyyy}-${lm_mm}-${lm_dd}`;
+    
     if(document.querySelectorAll('.expense-row').length === 0) addExpenseRow();
 }
 
@@ -108,16 +128,20 @@ function calculateTotal() {
 }
 
 async function generateOrderID(dateStr) {
+    const startIso = createLocalIsoString(dateStr, "00:00:00");
+    const endIso = createLocalIsoString(dateStr, "23:59:59");
     const { count } = await supabaseClient.from('pesanan').select('*', { count: 'exact', head: true })
-        .gte('created_at', `${dateStr}T00:00:00Z`).lte('created_at', `${dateStr}T23:59:59Z`);
+        .gte('created_at', startIso).lte('created_at', endIso);
     const dd = dateStr.split('-')[2], mm = dateStr.split('-')[1];
     return `PDD${dd}${mm}${String((count || 0) + 1).padStart(2, '0')}`;
 }
 
 async function konfirmasiPesanan() {
     const total = calculateTotal(); if (total === 0) return alert("Pilih item!");
-    const date = document.getElementById('order-date').value;
-    const id = await generateOrderID(date);
+    const dateVal = document.getElementById('order-date').value; 
+    const createdAtIso = createLocalIsoString(dateVal); // Menggunakan fungsi timezone fix
+
+    const id = await generateOrderID(dateVal);
     const items = [];
     for (let key in menus) {
         let q = parseInt(document.getElementById(key).innerText);
@@ -127,13 +151,17 @@ async function konfirmasiPesanan() {
     if (addPrice > 0) items.push({ name: document.getElementById('add-item-name').value || 'Biaya Lain', qty: 1, subtotal: addPrice });
 
     const { error } = await supabaseClient.from('pesanan').insert([{ 
-        no_pesanan: id, total_harga: total, metode_pembayaran: document.getElementById('payment-method').value, 
-        detail_pesanan: items, created_at: `${date}T${new Date().toTimeString().split(' ')[0]}Z` 
+        no_pesanan: id, 
+        total_harga: total, 
+        metode_pembayaran: document.getElementById('payment-method').value, 
+        detail_pesanan: items, 
+        created_at: createdAtIso 
     }]);
+
     if (error) alert(error.message); else { showCustomAlert('Berhasil', 'Pesanan disimpan.'); closeReceipt(); }
 }
 
-/** 5. PENGELUARAN (INPUT PER ITEM) */
+/** 5. PENGELUARAN */
 function addExpenseRow() {
     const rowId = Date.now();
     const html = `<div id="row-${rowId}" class="expense-row grid grid-cols-2 md:grid-cols-12 gap-3 p-4 bg-cream/10 rounded-xl border border-border">
@@ -173,9 +201,15 @@ async function simpanPengeluaran(e) {
 
 /** 6. LAPORAN & SALDO BERSIH */
 async function generateReport() {
-    const s = document.getElementById('filter-start').value, e = document.getElementById('filter-end').value;
-    const { data: o } = await supabaseClient.from('pesanan').select('*').gte('created_at', s + 'T00:00:00Z').lte('created_at', e + 'T23:59:59Z');
+    const s = document.getElementById('filter-start').value;
+    const e = document.getElementById('filter-end').value;
+    
+    const startIso = createLocalIsoString(s, "00:00:00");
+    const endIso = createLocalIsoString(e, "23:59:59");
+
+    const { data: o } = await supabaseClient.from('pesanan').select('*').gte('created_at', startIso).lte('created_at', endIso);
     const { data: ex } = await supabaseClient.from('pengeluaran').select('*').gte('tanggal', s).lte('tanggal', e);
+    
     globalOrders = o || []; globalExpenses = ex || [];
     updateUIReport(globalOrders, globalExpenses);
 }
@@ -187,7 +221,11 @@ function updateUIReport(orders, expenses) {
     document.getElementById('sum-balance').innerText = 'Rp ' + (tIn - tOut).toLocaleString('id-ID');
 
     let oH = ''; orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(o => {
-        oH += `<tr><td class="p-4 font-bold">${new Date(o.created_at).toLocaleDateString('id-ID')}</td><td class="p-4 text-right font-black">Rp ${o.total_harga.toLocaleString('id-ID')}</td><td class="p-4 text-center"><button onclick="bukaEditPesanan(${o.id})" class="text-blue-500 mr-2"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="hapusData('pesanan', ${o.id})" class="text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+        // Konversi akurat ke string lokal
+        const localObj = new Date(o.created_at);
+        const localDateStr = `${localObj.getDate()}/${localObj.getMonth() + 1}/${localObj.getFullYear()}`;
+        
+        oH += `<tr><td class="p-4 font-bold">${localDateStr}</td><td class="p-4 text-right font-black">Rp ${o.total_harga.toLocaleString('id-ID')}</td><td class="p-4 text-center"><button onclick="bukaEditPesanan(${o.id})" class="text-blue-500 mr-2"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="hapusData('pesanan', ${o.id})" class="text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
     });
     document.getElementById('order-table-body').innerHTML = oH || '<tr><td colspan="3" class="p-4 text-center">Kosong</td></tr>';
 
@@ -225,15 +263,20 @@ function renderCharts(orders, expenses) {
     paymentChartInstance = new Chart(ctxP, { type: 'doughnut', data: { labels: ['Tunai', 'Transfer', 'QRIS'], datasets: [{ data: [Math.max(0, pNet.Tunai), Math.max(0, pNet.Transfer), Math.max(0, pNet.QRIS)], backgroundColor: ['#EFE3CA', '#56B6C6', '#170C79'] }] }, options: opt });
 }
 
-/** 7. LOGIKA EDIT */
+/** 7. LOGIKA EDIT & TIMEZONE FIX */
 function closeEditModal(id) { document.getElementById(id).classList.add('hidden-force'); }
 
 function bukaEditPesanan(id) {
     const o = globalOrders.find(x => x.id === id); if(!o) return;
-    const parts = o.created_at.split('T');
+    
+    // Ambil tanggal dan jam murni berdasar zona waktu sistem lokal
+    const localObj = new Date(o.created_at);
+    const dStr = `${localObj.getFullYear()}-${String(localObj.getMonth()+1).padStart(2,'0')}-${String(localObj.getDate()).padStart(2,'0')}`;
+    const tStr = `${String(localObj.getHours()).padStart(2,'0')}:${String(localObj.getMinutes()).padStart(2,'0')}:${String(localObj.getSeconds()).padStart(2,'0')}`;
+
     document.getElementById('edit-order-id').value = o.id;
-    document.getElementById('edit-order-time').value = parts[1];
-    document.getElementById('edit-order-date').value = parts[0];
+    document.getElementById('edit-order-time').value = tStr;
+    document.getElementById('edit-order-date').value = dStr;
     document.getElementById('edit-order-method').value = o.metode_pembayaran;
     document.getElementById('edit-order-total').value = o.total_harga;
     document.getElementById('edit-order-modal').classList.remove('hidden-force');
@@ -241,8 +284,21 @@ function bukaEditPesanan(id) {
 
 async function simpanEditPesanan(e) {
     e.preventDefault();
-    const id = document.getElementById('edit-order-id').value, m = document.getElementById('edit-order-method').value, t = parseInt(document.getElementById('edit-order-total').value), d = document.getElementById('edit-order-date').value, tm = document.getElementById('edit-order-time').value;
-    const { error } = await supabaseClient.from('pesanan').update({ total_harga: t, metode_pembayaran: m, created_at: `${d}T${tm}` }).eq('id', id);
+    const id = document.getElementById('edit-order-id').value;
+    const m = document.getElementById('edit-order-method').value;
+    const t = parseInt(document.getElementById('edit-order-total').value);
+    
+    // Gabungkan menggunakan fix timezone
+    const d = document.getElementById('edit-order-date').value;
+    const tm = document.getElementById('edit-order-time').value;
+    const updatedCreatedAtIso = createLocalIsoString(d, tm);
+
+    const { error } = await supabaseClient.from('pesanan').update({ 
+        total_harga: t, 
+        metode_pembayaran: m, 
+        created_at: updatedCreatedAtIso 
+    }).eq('id', id);
+
     if (!error) { showCustomAlert('Sukses', 'Data diubah.'); closeEditModal('edit-order-modal'); generateReport(); }
 }
 
@@ -278,7 +334,7 @@ function hapusData(tabel, id) {
     const modal = document.getElementById('confirm-modal');
     modal.classList.remove('hidden');
     document.getElementById('confirm-ok').onclick = async () => {
-        const { error } = await supabaseClient.from(tabel).delete().eq('id', id);
+        await supabaseClient.from(tabel).delete().eq('id', id);
         modal.classList.add('hidden'); generateReport();
     };
     document.getElementById('confirm-cancel').onclick = () => modal.classList.add('hidden');
