@@ -1,15 +1,16 @@
-/** 1. KONFIGURASI SUPABASE & HELPER ZONA WAKTU (FIX) */
+/** 1. KONFIGURASI SUPABASE & HELPER ZONA WAKTU */
 const SUPABASE_URL = 'https://smbfunjcwevyzsolbspt.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_f3oGRQtQuvZd_Z2MVVsXKw_BzAyYbSN';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// NAMA MENU DIPERBARUI MENJADI "BIG"
 const menus = {
     'qty-ori': { name: 'Puding Karamel', price: 8000 },
     'qty-regal': { name: 'Puding Karamel Regal', price: 10000 },
     'qty-oreo': { name: 'Puding Karamel Oreo', price: 11000 },
-    'qty-karamel-500': { name: 'Puding Karamel 500ml', price: 42000 },
-    'qty-regal-500': { name: 'Puding Regal 500ml', price: 50000 },
-    'qty-oreo-500': { name: 'Puding Oreo 500ml', price: 55000 }
+    'qty-karamel-500': { name: 'Puding Karamel Big', price: 42000 },
+    'qty-regal-500': { name: 'Puding Regal Big', price: 50000 },
+    'qty-oreo-500': { name: 'Puding Oreo Big', price: 55000 }
 };
 
 let menuChartInstance = null, paymentChartInstance = null, globalOrders = [], globalExpenses = [], idleTimer;
@@ -24,7 +25,7 @@ function createLocalIsoString(dateStr, timeStr = null) {
     const dif = tzo >= 0 ? '+' : '-';
     const pad = num => String(num).padStart(2, '0');
     const off = dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
-    return `${dateStr}T${timeStr}${off}`; // Menghasilkan format aman: YYYY-MM-DDTHH:mm:ss+07:00
+    return `${dateStr}T${timeStr}${off}`; 
 }
 
 /** 2. LOGIN & SESI */
@@ -139,7 +140,7 @@ async function generateOrderID(dateStr) {
 async function konfirmasiPesanan() {
     const total = calculateTotal(); if (total === 0) return alert("Pilih item!");
     const dateVal = document.getElementById('order-date').value; 
-    const createdAtIso = createLocalIsoString(dateVal); // Menggunakan fungsi timezone fix
+    const createdAtIso = createLocalIsoString(dateVal);
 
     const id = await generateOrderID(dateVal);
     const items = [];
@@ -221,7 +222,6 @@ function updateUIReport(orders, expenses) {
     document.getElementById('sum-balance').innerText = 'Rp ' + (tIn - tOut).toLocaleString('id-ID');
 
     let oH = ''; orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(o => {
-        // Konversi akurat ke string lokal
         const localObj = new Date(o.created_at);
         const localDateStr = `${localObj.getDate()}/${localObj.getMonth() + 1}/${localObj.getFullYear()}`;
         
@@ -240,11 +240,22 @@ function renderCharts(orders, expenses) {
     const ctxM = document.getElementById('menuChart').getContext('2d'), ctxP = document.getElementById('paymentChart').getContext('2d');
     if (menuChartInstance) menuChartInstance.destroy(); if (paymentChartInstance) paymentChartInstance.destroy();
 
-    let mD = { 'Puding Karamel': 0, 'Puding Karamel Regal': 0, 'Puding Karamel Oreo': 0, 'Puding Karamel 500ml': 0, 'Puding Regal 500ml': 0, 'Puding Oreo 500ml': 0 };
+    // NAMA LEGEND CHART SUDAH DIUPDATE MENJADI "BIG"
+    let mD = { 'Puding Karamel': 0, 'Puding Karamel Regal': 0, 'Puding Karamel Oreo': 0, 'Puding Karamel Big': 0, 'Puding Regal Big': 0, 'Puding Oreo Big': 0 };
     let pIncome = { 'Tunai': 0, 'Transfer': 0, 'QRIS': 0 }, pExpense = { 'Tunai': 0, 'Transfer': 0, 'QRIS': 0 };
 
     orders.forEach(o => {
-        if (o.detail_pesanan) o.detail_pesanan.forEach(i => { if (mD[i.name] !== undefined) mD[i.name] += i.qty; });
+        if (o.detail_pesanan) {
+            o.detail_pesanan.forEach(i => { 
+                // KOMPATIBILITAS: Mengubah data lama "500ml" agar terbaca sebagai "Big"
+                let n = i.name;
+                if(n === 'Puding Karamel 500ml') n = 'Puding Karamel Big';
+                if(n === 'Puding Regal 500ml') n = 'Puding Regal Big';
+                if(n === 'Puding Oreo 500ml') n = 'Puding Oreo Big';
+                
+                if (mD[n] !== undefined) mD[n] += i.qty; 
+            });
+        }
         if (pIncome[o.metode_pembayaran] !== undefined) pIncome[o.metode_pembayaran] += o.total_harga;
     });
     expenses.forEach(e => { if (pExpense[e.metode_pembayaran] !== undefined) pExpense[e.metode_pembayaran] += e.total; });
@@ -263,13 +274,12 @@ function renderCharts(orders, expenses) {
     paymentChartInstance = new Chart(ctxP, { type: 'doughnut', data: { labels: ['Tunai', 'Transfer', 'QRIS'], datasets: [{ data: [Math.max(0, pNet.Tunai), Math.max(0, pNet.Transfer), Math.max(0, pNet.QRIS)], backgroundColor: ['#EFE3CA', '#56B6C6', '#170C79'] }] }, options: opt });
 }
 
-/** 7. LOGIKA EDIT & TIMEZONE FIX */
+/** 7. LOGIKA EDIT */
 function closeEditModal(id) { document.getElementById(id).classList.add('hidden-force'); }
 
 function bukaEditPesanan(id) {
     const o = globalOrders.find(x => x.id === id); if(!o) return;
     
-    // Ambil tanggal dan jam murni berdasar zona waktu sistem lokal
     const localObj = new Date(o.created_at);
     const dStr = `${localObj.getFullYear()}-${String(localObj.getMonth()+1).padStart(2,'0')}-${String(localObj.getDate()).padStart(2,'0')}`;
     const tStr = `${String(localObj.getHours()).padStart(2,'0')}:${String(localObj.getMinutes()).padStart(2,'0')}:${String(localObj.getSeconds()).padStart(2,'0')}`;
@@ -284,21 +294,9 @@ function bukaEditPesanan(id) {
 
 async function simpanEditPesanan(e) {
     e.preventDefault();
-    const id = document.getElementById('edit-order-id').value;
-    const m = document.getElementById('edit-order-method').value;
-    const t = parseInt(document.getElementById('edit-order-total').value);
-    
-    // Gabungkan menggunakan fix timezone
-    const d = document.getElementById('edit-order-date').value;
-    const tm = document.getElementById('edit-order-time').value;
+    const id = document.getElementById('edit-order-id').value, m = document.getElementById('edit-order-method').value, t = parseInt(document.getElementById('edit-order-total').value), d = document.getElementById('edit-order-date').value, tm = document.getElementById('edit-order-time').value;
     const updatedCreatedAtIso = createLocalIsoString(d, tm);
-
-    const { error } = await supabaseClient.from('pesanan').update({ 
-        total_harga: t, 
-        metode_pembayaran: m, 
-        created_at: updatedCreatedAtIso 
-    }).eq('id', id);
-
+    const { error } = await supabaseClient.from('pesanan').update({ total_harga: t, metode_pembayaran: m, created_at: updatedCreatedAtIso }).eq('id', id);
     if (!error) { showCustomAlert('Sukses', 'Data diubah.'); closeEditModal('edit-order-modal'); generateReport(); }
 }
 
@@ -334,7 +332,7 @@ function hapusData(tabel, id) {
     const modal = document.getElementById('confirm-modal');
     modal.classList.remove('hidden');
     document.getElementById('confirm-ok').onclick = async () => {
-        await supabaseClient.from(tabel).delete().eq('id', id);
+        const { error } = await supabaseClient.from(tabel).delete().eq('id', id);
         modal.classList.add('hidden'); generateReport();
     };
     document.getElementById('confirm-cancel').onclick = () => modal.classList.add('hidden');
@@ -347,17 +345,13 @@ function closeReceipt() {
 }
 
 function exportToExcel() {
-    const data = [ ["LAPORAN KEUANGAN PUDING"], ["Metode", "Saldo Bersih"], ["Tunai", document.getElementById('sum-income').innerText], ["Saldo Akhir", document.getElementById('sum-balance').innerText] ];
-    const ws = XLSX.utils.aoa_to_sheet(data), wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([["LAPORAN KEUANGAN PUDIDING"]]), wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-    XLSX.writeFile(wb, `Laporan_Puding.xlsx`);
+    XLSX.writeFile(wb, `Laporan_Pudiding.xlsx`);
 }
 
 function exportToPDF() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
-    doc.text("LAPORAN KEUANGAN PUDING", 14, 20);
-    doc.text(`Pemasukan: ${document.getElementById('sum-income').innerText}`, 14, 30);
-    doc.text(`Pengeluaran: ${document.getElementById('sum-expense').innerText}`, 14, 40);
-    doc.text(`Saldo: ${document.getElementById('sum-balance').innerText}`, 14, 50);
-    doc.save("Laporan_Puding.pdf");
+    doc.text("LAPORAN KEUANGAN PUDIDING", 14, 20);
+    doc.save("Laporan_Pudiding.pdf");
 }

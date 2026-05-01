@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pudiding Dashboard</title>
     
+    <link rel="icon" type="image/png" href="icon-192.png">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#170C79">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,7 +30,10 @@
 <body class="h-screen bg-cream overflow-hidden">
 
     <div id="loading-overlay" class="fixed inset-0 bg-primary z-[10000] flex items-center justify-center transition-opacity duration-500">
-        <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Pudiding</div>
+        <div class="flex flex-col items-center gap-4">
+            <img src="icon-192.png" alt="Logo" class="w-20 h-20 animate-bounce">
+            <div class="text-white font-black text-2xl uppercase tracking-widest">Pudiding</div>
+        </div>
     </div>
 
     <div id="alert-box" class="toast-center w-full max-w-[340px]"><div class="bg-white border-2 border-primary shadow-2xl rounded-2xl p-6 text-center"><div id="alert-icon" class="mb-4 flex justify-center"></div><h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3><p id="alert-message" class="text-sm text-slate-600 mb-6"></p><button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button></div></div>
@@ -37,7 +42,7 @@
 
     <div id="login-screen" class="fixed inset-0 flex items-center justify-center p-4 z-[999] bg-cream hidden-force">
         <div class="w-full max-w-sm bg-white rounded-3xl border border-border shadow-2xl p-10 text-center">
-            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="cookie" class="w-10 h-10 text-primary"></i></div>
+            <img src="icon-192.png" alt="Logo" class="w-24 h-24 mx-auto mb-6 drop-shadow-lg">
             <h1 class="text-2xl font-black text-primary mb-2 tracking-tighter uppercase">Pudiding Dashboard</h1>
             <p class="text-sm text-slate-500 mb-8 font-medium">Masukkan akun akses admin.</p>
             <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -50,7 +55,10 @@
 
     <div id="main-app" class="h-screen w-full hidden-force text-primary flex">
         <aside class="w-64 border-r border-border bg-white flex flex-col hidden md:flex shrink-0">
-            <div class="h-20 flex items-center px-8"><i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i><span class="font-black text-lg uppercase tracking-tighter">Pudiding</span></div>
+            <div class="h-20 flex items-center px-8">
+                <img src="icon-192.png" alt="Logo" class="w-10 h-10 mr-3 rounded-lg shadow-sm">
+                <span class="font-black text-lg uppercase tracking-tighter">Pudiding</span>
+            </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="switchTab('pesanan')" id="nav-pesanan" class="nav-btn active flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="shopping-bag" class="w-5 h-5 mr-3"></i> Kasir Pesanan</button>
                 <button onclick="switchTab('pengeluaran')" id="nav-pengeluaran" class="nav-btn flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="receipt" class="w-5 h-5 mr-3"></i> Pengeluaran</button>
@@ -61,7 +69,10 @@
 
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             <header class="h-16 bg-white border-b border-border flex items-center justify-between px-6 md:hidden shrink-0">
-                <span class="font-black uppercase tracking-tighter">Pudiding</span>
+                <div class="flex items-center gap-2">
+                    <img src="icon-192.png" alt="Logo" class="w-8 h-8 rounded-md">
+                    <span class="font-black uppercase tracking-tighter">Pudiding</span>
+                </div>
                 <div class="flex gap-2">
                     <button onclick="switchTab('pesanan')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="shopping-bag" class="w-5 h-5"></i></button>
                     <button onclick="switchTab('pengeluaran')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="receipt" class="w-5 h-5"></i></button>
@@ -76,12 +87,12 @@
                         <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Karamel Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 8.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-ori', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-ori" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-ori', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
                         <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Regal Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 10.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-regal', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-regal" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-regal', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
                         <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Oreo Small</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 11.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-oreo', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-oreo" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-oreo', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
-                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Karamel 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 42.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-karamel-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-karamel-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-karamel-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
-                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Regal 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 50.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-regal-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-regal-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-regal-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
-                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Oreo 500ml</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 55.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-oreo-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-oreo-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-oreo-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Karamel Big</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 42.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-karamel-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-karamel-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-karamel-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Regal Big</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 50.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-regal-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-regal-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-regal-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
+                        <div class="shad-card p-6 flex flex-col items-center"><h3 class="font-bold text-lg mb-1">Oreo Big</h3><p class="text-accent1 font-bold mb-4 text-sm">Rp 55.000</p><div class="flex items-center gap-4 bg-cream/40 p-2 rounded-2xl border border-border"><button onclick="updateQty('qty-oreo-500', -1)" class="w-10 h-10 bg-white border rounded-xl shadow-sm flex items-center justify-center"><i data-lucide="minus"></i></button><span id="qty-oreo-500" class="text-xl font-black w-6 text-center">0</span><button onclick="updateQty('qty-oreo-500', 1)" class="w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center"><i data-lucide="plus"></i></button></div></div>
                     </div>
 
-                    <div class="shad-card p-8 bg-primary text-white">
+                    <div class="shad-card p-8 bg-primary text-white border-none shadow-2xl">
                         <div class="flex justify-between items-center mb-8 pb-6 border-b border-white/10"><h3 class="font-bold text-lg uppercase tracking-widest">Total Pembayaran</h3><span class="text-3xl font-black">Rp <span id="total-price">0</span></span></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div><label class="text-[10px] font-black uppercase text-accent2">Tanggal Transaksi</label><input type="date" id="order-date" class="w-full h-12 bg-white/10 rounded-xl px-4 font-bold outline-none"></div>
@@ -175,7 +186,7 @@
 
     <div id="receipt-modal" class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-10 receipt-font border-t-8 border-primary">
-            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase tracking-tighter">Pudiding</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
+            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase tracking-tighter">Pudiding.</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
             <div id="receipt-items" class="space-y-4 mb-8 text-sm font-bold"></div>
             <div class="border-t-2 border-dashed border-border pt-8 flex justify-between font-black text-xl"><span>TOTAL</span><span id="receipt-total-price"></span></div>
             <div class="text-center mt-10"><p class="text-[10px] font-black uppercase text-accent1 mb-6">Metode: <span id="receipt-method"></span></p><div class="flex gap-3 btn-no-print"><button onclick="window.print()" class="flex-1 h-12 bg-cream text-primary rounded-xl font-black text-xs">PDF</button><button onclick="closeReceipt()" class="flex-1 h-12 bg-primary text-white rounded-xl font-black text-xs shadow-lg">TUTUP</button></div></div>
