@@ -173,11 +173,18 @@ function addExpenseRow() {
     const container = document.getElementById('expense-items-container');
     const rowId = Date.now();
     const html = `
-        <div id="row-${rowId}" class="expense-row grid grid-cols-12 gap-3 items-center p-4 bg-cream/10 rounded-xl border border-border">
-            <div class="col-span-5 text-primary"><input type="text" placeholder="Item" class="exp-item-name w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none font-bold"></div>
-            <div class="col-span-2 text-primary"><input type="number" placeholder="Qty" class="exp-item-qty w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none" oninput="calcExpRow()"></div>
-            <div class="col-span-3 text-primary"><input type="number" placeholder="Harga" class="exp-item-price w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none font-bold" oninput="calcExpRow()"></div>
-            <div class="col-span-2 flex justify-center"><button type="button" onclick="removeExpenseRow(${rowId})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2"></i></button></div>
+        <div id="row-${rowId}" class="expense-row grid grid-cols-2 md:grid-cols-12 gap-3 items-center p-4 bg-cream/10 rounded-xl border border-border">
+            <div class="col-span-2 md:col-span-4 text-primary"><input type="text" placeholder="Item" class="exp-item-name w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none font-bold" required></div>
+            <div class="col-span-1 md:col-span-2 text-primary"><input type="number" placeholder="Qty" class="exp-item-qty w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none" oninput="calcExpRow()" required></div>
+            <div class="col-span-1 md:col-span-3 text-primary"><input type="number" placeholder="Harga" class="exp-item-price w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none font-bold" oninput="calcExpRow()" required></div>
+            <div class="col-span-1 md:col-span-2 text-primary">
+                <select class="exp-item-method w-full h-11 bg-white border border-border rounded-lg px-3 text-sm outline-none font-bold text-primary">
+                    <option value="Tunai">Tunai</option>
+                    <option value="Transfer">Transfer</option>
+                    <option value="QRIS">QRIS</option>
+                </select>
+            </div>
+            <div class="col-span-1 md:col-span-1 flex justify-end md:justify-center"><button type="button" onclick="removeExpenseRow(${rowId})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2"></i></button></div>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', html);
@@ -198,20 +205,30 @@ function calcExpRow() {
 async function simpanPengeluaran(e) {
     e.preventDefault();
     const date = document.getElementById('exp-date').value;
-    const method = document.getElementById('exp-method').value;
     const rows = document.querySelectorAll('.expense-row');
     const dataToInsert = [];
+    
     rows.forEach(r => {
         const n = r.querySelector('.exp-item-name').value;
         const q = parseInt(r.querySelector('.exp-item-qty').value);
         const p = parseInt(r.querySelector('.exp-item-price').value);
-        if (n && q && p) dataToInsert.push({ tanggal: date, nama_item: n, qty: q, harga_satuan: p, total: q * p, metode_pembayaran: method });
+        const m = r.querySelector('.exp-item-method').value; 
+        
+        if (n && q && p) {
+            dataToInsert.push({ tanggal: date, nama_item: n, qty: q, harga_satuan: p, total: q * p, metode_pembayaran: m });
+        }
     });
+
     if (dataToInsert.length === 0) return showCustomAlert('Ops', 'Isi minimal 1 item.', 'error');
     
     const { error } = await supabaseClient.from('pengeluaran').insert(dataToInsert);
     if (error) showCustomAlert('Gagal', error.message, 'error');
-    else { showCustomAlert('Berhasil', 'Pengeluaran dicatat.'); document.getElementById('expense-items-container').innerHTML = ''; addExpenseRow(); calcExpRow(); }
+    else { 
+        showCustomAlert('Berhasil', 'Pengeluaran dicatat.'); 
+        document.getElementById('expense-items-container').innerHTML = ''; 
+        addExpenseRow(); 
+        calcExpRow(); 
+    }
 }
 
 /** 6. LAPORAN & CHARTS */
@@ -231,13 +248,11 @@ function updateUIReport(orders, expenses) {
     document.getElementById('sum-expense').innerText = 'Rp ' + tOut.toLocaleString('id-ID');
     document.getElementById('sum-balance').innerText = 'Rp ' + (tIn - tOut).toLocaleString('id-ID');
 
-    // Menambahkan tombol edit (pencil icon) pada tabel Pesanan
     let oH = ''; orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(o => {
         oH += `<tr><td class="p-4 font-bold text-primary">${new Date(o.created_at).toLocaleDateString('id-ID')}</td><td class="p-4 font-black text-right">Rp ${o.total_harga.toLocaleString('id-ID')}</td><td class="p-4 text-center flex justify-center gap-1"><button onclick="bukaEditPesanan(${o.id})" class="text-blue-500 p-1 hover:bg-blue-50 rounded"><i data-lucide="pencil"></i></button><button onclick="cetakStrukUlang('${o.no_pesanan}')" class="text-accent1 p-1 hover:bg-accent1/10 rounded"><i data-lucide="printer"></i></button><button onclick="hapusData('pesanan', ${o.id})" class="text-red-400 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2"></i></button></td></tr>`;
     });
     document.getElementById('order-table-body').innerHTML = oH || '<tr><td colspan="3" class="p-4 text-center">Kosong</td></tr>';
 
-    // Menambahkan tombol edit (pencil icon) pada tabel Pengeluaran
     let eH = ''; expenses.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).forEach(e => {
         eH += `<tr><td class="p-4 font-bold">${e.tanggal}</td><td class="p-4 font-bold text-primary">${e.nama_item} (x${e.qty})</td><td class="p-4 font-black text-right">Rp ${e.total.toLocaleString('id-ID')}</td><td class="p-4 text-center flex justify-center gap-1"><button onclick="bukaEditPengeluaran(${e.id})" class="text-blue-500 p-1 hover:bg-blue-50 rounded"><i data-lucide="pencil"></i></button><button onclick="hapusData('pengeluaran', ${e.id})" class="text-red-400 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2"></i></button></td></tr>`;
     });
@@ -275,7 +290,14 @@ function closeEditModal(modalId) {
 function bukaEditPesanan(id) {
     const o = globalOrders.find(x => x.id === id);
     if (!o) return;
+    
+    const dateTimeParts = o.created_at.split('T');
+    const orderDate = dateTimeParts[0]; 
+    const orderTime = dateTimeParts[1] || "00:00:00Z"; 
+
     document.getElementById('edit-order-id').value = o.id;
+    document.getElementById('edit-order-time').value = orderTime; 
+    document.getElementById('edit-order-date').value = orderDate; 
     document.getElementById('edit-order-method').value = o.metode_pembayaran;
     document.getElementById('edit-order-total').value = o.total_harga;
     
@@ -288,8 +310,17 @@ async function simpanEditPesanan(e) {
     const id = document.getElementById('edit-order-id').value;
     const method = document.getElementById('edit-order-method').value;
     const total = parseInt(document.getElementById('edit-order-total').value);
+    
+    const newDate = document.getElementById('edit-order-date').value;
+    const originalTime = document.getElementById('edit-order-time').value;
+    const newCreatedAt = `${newDate}T${originalTime}`;
 
-    const { error } = await supabaseClient.from('pesanan').update({ total_harga: total, metode_pembayaran: method }).eq('id', id);
+    const { error } = await supabaseClient.from('pesanan').update({ 
+        total_harga: total, 
+        metode_pembayaran: method,
+        created_at: newCreatedAt
+    }).eq('id', id);
+
     if (error) showCustomAlert('Gagal', error.message, 'error');
     else {
         showCustomAlert('Berhasil', 'Pesanan diperbarui.');

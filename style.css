@@ -19,7 +19,6 @@ body {
     overflow-x: hidden;
 }
 
-/* ANTI MACET KELAS */
 .hidden-force { display: none !important; }
 .flex-force { display: flex !important; }
 .block-force { display: block !important; }

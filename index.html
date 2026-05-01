@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pudiding Dashboard</title>
+    <title>Puding Admin - Premium Dashboard</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#170C79">
@@ -28,7 +28,7 @@
 <body class="h-screen bg-cream overflow-hidden">
 
     <div id="loading-overlay" class="fixed inset-0 bg-primary z-[10000] flex items-center justify-center transition-opacity duration-500">
-        <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Pudiding</div>
+        <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Puding.</div>
     </div>
 
     <div id="alert-box" class="toast-center w-full max-w-[340px]"><div class="bg-white border-2 border-primary shadow-2xl rounded-2xl p-6 text-center"><div id="alert-icon" class="mb-4 flex justify-center"></div><h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3><p id="alert-message" class="text-sm text-slate-600 mb-6"></p><button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button></div></div>
@@ -37,7 +37,7 @@
     <div id="login-screen" class="fixed inset-0 flex items-center justify-center p-4 z-[999] bg-cream hidden-force">
         <div class="w-full max-w-sm bg-white rounded-3xl border border-border shadow-2xl p-10 text-center">
             <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="cookie" class="w-10 h-10 text-primary"></i></div>
-            <h1 class="text-2xl font-black text-primary mb-2 tracking-tighter uppercase">Pudiding Dashboard</h1>
+            <h1 class="text-2xl font-black text-primary mb-2 tracking-tighter uppercase">Puding Dashboard</h1>
             <p class="text-sm text-slate-500 mb-8 font-medium">Masukkan akun untuk akses admin.</p>
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <input type="text" id="username" placeholder="Username" class="w-full h-12 bg-cream/30 border-2 border-transparent focus:border-primary rounded-xl px-4 font-semibold outline-none transition-all" required>
@@ -50,7 +50,7 @@
     <div id="main-app" class="h-screen w-full hidden-force text-primary flex">
         <aside class="w-64 border-r border-border bg-white flex flex-col hidden md:flex shrink-0">
             <div class="h-20 flex items-center px-8">
-                <i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i><span class="font-black text-lg uppercase tracking-tighter">Pudiding</span>
+                <i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i><span class="font-black text-lg uppercase tracking-tighter">Puding.</span>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="switchTab('pesanan')" id="nav-pesanan" class="nav-btn active flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="shopping-bag" class="w-5 h-5 mr-3"></i> Kasir Pesanan</button>
@@ -62,7 +62,7 @@
 
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             <header class="h-16 bg-white border-b border-border flex items-center justify-between px-6 md:hidden shrink-0">
-                <span class="font-black uppercase tracking-tighter">Pudiding</span>
+                <span class="font-black uppercase tracking-tighter">Puding.</span>
                 <div class="flex gap-2">
                     <button onclick="switchTab('pesanan')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="shopping-bag" class="w-5 h-5"></i></button>
                     <button onclick="switchTab('pengeluaran')" class="p-2 text-primary bg-cream rounded-lg"><i data-lucide="receipt" class="w-5 h-5"></i></button>
@@ -100,9 +100,9 @@
                     <h2 class="text-3xl font-black text-primary mb-8 tracking-tight uppercase">Catat Pengeluaran</h2>
                     <div class="shad-card p-10">
                         <form onsubmit="simpanPengeluaran(event)" class="space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div><label class="text-xs font-black text-slate-400 uppercase">Tanggal Belanja</label><input type="date" id="exp-date" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none" required></div>
-                                <div><label class="text-xs font-black text-slate-400 uppercase">Metode Pembayaran</label><select id="exp-method" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                            <div>
+                                <label class="text-xs font-black text-slate-400 uppercase">Tanggal Belanja</label>
+                                <input type="date" id="exp-date" class="w-full h-12 bg-cream/30 border border-border rounded-xl px-4 mt-1 font-bold outline-none max-w-sm" required>
                             </div>
 
                             <div class="border-t border-border pt-8">
@@ -167,8 +167,12 @@
             <h3 class="text-xl font-bold mb-6 text-primary uppercase">Edit Pesanan</h3>
             <form onsubmit="simpanEditPesanan(event)" class="space-y-4">
                 <input type="hidden" id="edit-order-id">
+                <input type="hidden" id="edit-order-time">
+                
+                <div><label class="text-xs font-bold text-slate-400">Tanggal Transaksi</label><input type="date" id="edit-order-date" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
                 <div><label class="text-xs font-bold text-slate-400">Metode Bayar</label><select id="edit-order-method" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
                 <div><label class="text-xs font-bold text-slate-400">Total Harga (Rp)</label><input type="number" id="edit-order-total" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                
                 <div class="flex gap-3 pt-4">
                     <button type="button" onclick="closeEditModal('edit-order-modal')" class="flex-1 h-10 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
                     <button type="submit" class="flex-1 h-10 bg-accent1 text-primary rounded-xl font-bold shadow-lg">Simpan</button>
