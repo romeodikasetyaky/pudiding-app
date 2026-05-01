@@ -231,15 +231,18 @@ function updateUIReport(orders, expenses) {
     document.getElementById('sum-expense').innerText = 'Rp ' + tOut.toLocaleString('id-ID');
     document.getElementById('sum-balance').innerText = 'Rp ' + (tIn - tOut).toLocaleString('id-ID');
 
+    // Menambahkan tombol edit (pencil icon) pada tabel Pesanan
     let oH = ''; orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(o => {
-        oH += `<tr><td class="p-4 font-bold text-primary">${new Date(o.created_at).toLocaleDateString('id-ID')}</td><td class="p-4 font-black text-right">Rp ${o.total_harga.toLocaleString('id-ID')}</td><td class="p-4 text-center flex justify-center gap-1"><button onclick="cetakStrukUlang('${o.no_pesanan}')" class="text-accent1 p-1"><i data-lucide="printer"></i></button><button onclick="hapusData('pesanan', ${o.id})" class="text-red-400 p-1"><i data-lucide="trash-2"></i></button></td></tr>`;
+        oH += `<tr><td class="p-4 font-bold text-primary">${new Date(o.created_at).toLocaleDateString('id-ID')}</td><td class="p-4 font-black text-right">Rp ${o.total_harga.toLocaleString('id-ID')}</td><td class="p-4 text-center flex justify-center gap-1"><button onclick="bukaEditPesanan(${o.id})" class="text-blue-500 p-1 hover:bg-blue-50 rounded"><i data-lucide="pencil"></i></button><button onclick="cetakStrukUlang('${o.no_pesanan}')" class="text-accent1 p-1 hover:bg-accent1/10 rounded"><i data-lucide="printer"></i></button><button onclick="hapusData('pesanan', ${o.id})" class="text-red-400 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2"></i></button></td></tr>`;
     });
     document.getElementById('order-table-body').innerHTML = oH || '<tr><td colspan="3" class="p-4 text-center">Kosong</td></tr>';
 
+    // Menambahkan tombol edit (pencil icon) pada tabel Pengeluaran
     let eH = ''; expenses.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).forEach(e => {
-        eH += `<tr><td class="p-4 font-bold">${e.tanggal}</td><td class="p-4 font-bold text-primary">${e.nama_item} (x${e.qty})</td><td class="p-4 font-black text-right">Rp ${e.total.toLocaleString('id-ID')}</td><td class="p-4 text-center"><button onclick="hapusData('pengeluaran', ${e.id})" class="text-red-400"><i data-lucide="trash-2"></i></button></td></tr>`;
+        eH += `<tr><td class="p-4 font-bold">${e.tanggal}</td><td class="p-4 font-bold text-primary">${e.nama_item} (x${e.qty})</td><td class="p-4 font-black text-right">Rp ${e.total.toLocaleString('id-ID')}</td><td class="p-4 text-center flex justify-center gap-1"><button onclick="bukaEditPengeluaran(${e.id})" class="text-blue-500 p-1 hover:bg-blue-50 rounded"><i data-lucide="pencil"></i></button><button onclick="hapusData('pengeluaran', ${e.id})" class="text-red-400 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2"></i></button></td></tr>`;
     });
     document.getElementById('expense-table-body').innerHTML = eH || '<tr><td colspan="4" class="p-4 text-center">Kosong</td></tr>';
+    
     lucide.createIcons(); renderCharts(orders, expenses);
 }
 
@@ -263,7 +266,75 @@ function renderCharts(orders, expenses) {
     paymentChartInstance = new Chart(ctxP, { type: 'doughnut', data: { labels: Object.keys(pD), datasets: [{ data: Object.values(pD), backgroundColor: ['#EFE3CA', '#56B6C6', '#170C79'], borderWidth: 1, borderColor: '#d4cbb0' }] }, options: opt });
 }
 
-/** 7. EXPORT & MISC */
+/** 7. FUNGSI EDIT DATA */
+function closeEditModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden-force');
+    document.getElementById(modalId).classList.remove('flex-force');
+}
+
+function bukaEditPesanan(id) {
+    const o = globalOrders.find(x => x.id === id);
+    if (!o) return;
+    document.getElementById('edit-order-id').value = o.id;
+    document.getElementById('edit-order-method').value = o.metode_pembayaran;
+    document.getElementById('edit-order-total').value = o.total_harga;
+    
+    document.getElementById('edit-order-modal').classList.remove('hidden-force');
+    document.getElementById('edit-order-modal').classList.add('flex-force');
+}
+
+async function simpanEditPesanan(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-order-id').value;
+    const method = document.getElementById('edit-order-method').value;
+    const total = parseInt(document.getElementById('edit-order-total').value);
+
+    const { error } = await supabaseClient.from('pesanan').update({ total_harga: total, metode_pembayaran: method }).eq('id', id);
+    if (error) showCustomAlert('Gagal', error.message, 'error');
+    else {
+        showCustomAlert('Berhasil', 'Pesanan diperbarui.');
+        closeEditModal('edit-order-modal');
+        generateReport();
+    }
+}
+
+function bukaEditPengeluaran(id) {
+    const e = globalExpenses.find(x => x.id === id);
+    if (!e) return;
+    document.getElementById('edit-expense-id').value = e.id;
+    document.getElementById('edit-expense-date').value = e.tanggal;
+    document.getElementById('edit-expense-name').value = e.nama_item;
+    document.getElementById('edit-expense-qty').value = e.qty;
+    document.getElementById('edit-expense-price').value = e.harga_satuan;
+    document.getElementById('edit-expense-method').value = e.metode_pembayaran;
+    
+    document.getElementById('edit-expense-modal').classList.remove('hidden-force');
+    document.getElementById('edit-expense-modal').classList.add('flex-force');
+}
+
+async function simpanEditPengeluaran(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-expense-id').value;
+    const date = document.getElementById('edit-expense-date').value;
+    const name = document.getElementById('edit-expense-name').value;
+    const qty = parseInt(document.getElementById('edit-expense-qty').value);
+    const price = parseInt(document.getElementById('edit-expense-price').value);
+    const method = document.getElementById('edit-expense-method').value;
+    const total = qty * price;
+
+    const { error } = await supabaseClient.from('pengeluaran').update({ 
+        tanggal: date, nama_item: name, qty: qty, harga_satuan: price, total: total, metode_pembayaran: method 
+    }).eq('id', id);
+    
+    if (error) showCustomAlert('Gagal', error.message, 'error');
+    else {
+        showCustomAlert('Berhasil', 'Pengeluaran diperbarui.');
+        closeEditModal('edit-expense-modal');
+        generateReport();
+    }
+}
+
+/** 8. EXPORT & MISC */
 function exportToExcel() {
     const start = document.getElementById('filter-start').value;
     const end = document.getElementById('filter-end').value;

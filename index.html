@@ -31,26 +31,8 @@
         <div class="text-white font-black text-2xl animate-pulse uppercase tracking-widest">Pudiding</div>
     </div>
 
-    <div id="alert-box" class="toast-center w-full max-w-[340px]">
-        <div class="bg-white border-2 border-primary shadow-2xl rounded-2xl p-6 text-center">
-            <div id="alert-icon" class="mb-4 flex justify-center"></div>
-            <h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3>
-            <p id="alert-message" class="text-sm text-slate-600 mb-6"></p>
-            <button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button>
-        </div>
-    </div>
-
-    <div id="confirm-modal" class="fixed inset-0 z-[9999] modal-overlay hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center animate-in">
-            <div class="text-primary mb-4 flex justify-center"><i data-lucide="help-circle" class="w-14 h-14"></i></div>
-            <h3 class="text-xl font-bold mb-2 text-primary">Hapus Data?</h3>
-            <p class="text-sm text-slate-500 mb-8">Data yang dihapus tidak dapat dipulihkan.</p>
-            <div class="flex gap-3">
-                <button id="confirm-cancel" class="flex-1 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
-                <button id="confirm-ok" class="flex-1 h-12 bg-red-500 text-white rounded-xl font-bold shadow-lg">Ya, Hapus</button>
-            </div>
-        </div>
-    </div>
+    <div id="alert-box" class="toast-center w-full max-w-[340px]"><div class="bg-white border-2 border-primary shadow-2xl rounded-2xl p-6 text-center"><div id="alert-icon" class="mb-4 flex justify-center"></div><h3 id="alert-title" class="font-bold text-xl mb-1 text-primary"></h3><p id="alert-message" class="text-sm text-slate-600 mb-6"></p><button onclick="closeAlert()" class="w-full h-11 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition">Selesai</button></div></div>
+    <div id="confirm-modal" class="fixed inset-0 z-[9999] modal-overlay hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center animate-in"><div class="text-primary mb-4 flex justify-center"><i data-lucide="help-circle" class="w-14 h-14"></i></div><h3 class="text-xl font-bold mb-2 text-primary">Hapus Data?</h3><p class="text-sm text-slate-500 mb-8">Data yang dihapus tidak dapat dipulihkan.</p><div class="flex gap-3"><button id="confirm-cancel" class="flex-1 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button><button id="confirm-ok" class="flex-1 h-12 bg-red-500 text-white rounded-xl font-bold shadow-lg">Ya, Hapus</button></div></div></div>
 
     <div id="login-screen" class="fixed inset-0 flex items-center justify-center p-4 z-[999] bg-cream hidden-force">
         <div class="w-full max-w-sm bg-white rounded-3xl border border-border shadow-2xl p-10 text-center">
@@ -68,16 +50,13 @@
     <div id="main-app" class="h-screen w-full hidden-force text-primary flex">
         <aside class="w-64 border-r border-border bg-white flex flex-col hidden md:flex shrink-0">
             <div class="h-20 flex items-center px-8">
-                <i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i>
-                <span class="font-black text-lg uppercase tracking-tighter">Pudiding</span>
+                <i data-lucide="cookie" class="w-6 h-6 mr-3 text-primary"></i><span class="font-black text-lg uppercase tracking-tighter">Pudiding</span>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="switchTab('pesanan')" id="nav-pesanan" class="nav-btn active flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="shopping-bag" class="w-5 h-5 mr-3"></i> Kasir Pesanan</button>
                 <button onclick="switchTab('pengeluaran')" id="nav-pengeluaran" class="nav-btn flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="receipt" class="w-5 h-5 mr-3"></i> Pengeluaran</button>
                 <button onclick="switchTab('laporan')" id="nav-laporan" class="nav-btn flex items-center w-full px-4 py-3 text-sm rounded-xl"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Laporan Arus Kas</button>
-                <div class="pt-6 mt-6 border-t border-border">
-                    <button onclick="handleLogout()" class="flex items-center w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all"><i data-lucide="power" class="w-5 h-5 mr-3"></i> Keluar Admin</button>
-                </div>
+                <div class="pt-6 mt-6 border-t border-border"><button onclick="handleLogout()" class="flex items-center w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all"><i data-lucide="power" class="w-5 h-5 mr-3"></i> Keluar Admin</button></div>
             </nav>
         </aside>
 
@@ -183,9 +162,44 @@
         </main>
     </div>
 
+    <div id="edit-order-modal" class="fixed inset-0 z-[9999] modal-overlay hidden-force flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-in">
+            <h3 class="text-xl font-bold mb-6 text-primary uppercase">Edit Pesanan</h3>
+            <form onsubmit="simpanEditPesanan(event)" class="space-y-4">
+                <input type="hidden" id="edit-order-id">
+                <div><label class="text-xs font-bold text-slate-400">Metode Bayar</label><select id="edit-order-method" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                <div><label class="text-xs font-bold text-slate-400">Total Harga (Rp)</label><input type="number" id="edit-order-total" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeEditModal('edit-order-modal')" class="flex-1 h-10 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="flex-1 h-10 bg-accent1 text-primary rounded-xl font-bold shadow-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-expense-modal" class="fixed inset-0 z-[9999] modal-overlay hidden-force flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-in">
+            <h3 class="text-xl font-bold mb-6 text-primary uppercase">Edit Pengeluaran</h3>
+            <form onsubmit="simpanEditPengeluaran(event)" class="space-y-4">
+                <input type="hidden" id="edit-expense-id">
+                <div><label class="text-xs font-bold text-slate-400">Tanggal</label><input type="date" id="edit-expense-date" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                <div><label class="text-xs font-bold text-slate-400">Nama Item</label><input type="text" id="edit-expense-name" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-xs font-bold text-slate-400">Qty</label><input type="number" id="edit-expense-qty" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                    <div><label class="text-xs font-bold text-slate-400">Harga Satuan</label><input type="number" id="edit-expense-price" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold" required></div>
+                </div>
+                <div><label class="text-xs font-bold text-slate-400">Metode</label><select id="edit-expense-method" class="w-full h-10 bg-cream/30 border border-border rounded-lg px-3 outline-none font-bold"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeEditModal('edit-expense-modal')" class="flex-1 h-10 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="flex-1 h-10 bg-accent1 text-primary rounded-xl font-bold shadow-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="receipt-modal" class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-10 receipt-font border-t-8 border-primary">
-            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase text-primary tracking-tighter">Pudiding</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
+            <div class="text-center space-y-1 border-b-2 border-dashed border-border pb-8 mb-8"><h2 class="font-black text-2xl uppercase text-primary tracking-tighter">Puding.</h2><p class="text-[10px] text-slate-400 font-bold" id="receipt-date"></p><p class="text-[9px] font-mono text-slate-300">ID: <span id="receipt-no"></span></p></div>
             <div id="receipt-items" class="space-y-4 mb-8 text-sm text-primary font-bold"></div>
             <div class="border-t-2 border-dashed border-border pt-8 flex justify-between font-black text-xl text-primary"><span>TOTAL</span><span id="receipt-total-price"></span></div>
             <div class="text-center mt-10">
